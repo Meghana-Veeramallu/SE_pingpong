@@ -1,43 +1,55 @@
 import pygame
 from game.game_engine import GameEngine
 
+# Initialize pygame/Start application
 pygame.init()
+pygame.mixer.init()
 
+# Screen dimensions
 WIDTH, HEIGHT = 800, 600
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Ping Pong Game")
+SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Ping Pong - Pygame Version")
 
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
+# Clock
 clock = pygame.time.Clock()
-game = GameEngine(WIDTH, HEIGHT)
+FPS = 60
 
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+# Game loop
+engine = GameEngine(WIDTH, HEIGHT)
 
-        # After game over, wait for user keypress to show menu
-        elif event.type == pygame.KEYDOWN and game.game_over:
-            game.show_replay_menu()
-
-        # Handle replay menu choices
-        elif event.type == pygame.KEYDOWN and game.show_menu:
-            if event.key == pygame.K_3:
-                game.reset_game(3)
-            elif event.key == pygame.K_5:
-                game.reset_game(5)
-            elif event.key == pygame.K_7:
-                game.reset_game(7)
-            elif event.key == pygame.K_ESCAPE:
+def main():
+    running = True
+    while running:
+        SCREEN.fill(BLACK)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
                 running = False
 
-    # Regular gameplay
-    if not game.show_menu:
-        game.handle_input()
-        game.update()
+        engine.handle_input()
+        engine.update()
 
-    game.render(screen)
-    pygame.display.flip()
-    clock.tick(60)
+        if engine.game_over:
+            engine.display_game_over(SCREEN)
+            pygame.display.flip()
+            pygame.time.delay(2000)
 
-pygame.quit()
+            choice = engine.display_replay_menu(SCREEN)
+            if choice is None:
+                running = False
+            else:
+                engine.reset_game(choice)
+                continue
+
+        engine.render(SCREEN)
+
+        pygame.display.flip()
+        clock.tick(FPS)
+
+    pygame.quit()
+
+if __name__ == "__main__":
+    main()
