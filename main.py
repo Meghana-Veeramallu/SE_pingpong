@@ -1,41 +1,32 @@
 import pygame
 from game.game_engine import GameEngine
 
-# Initialize pygame/Start application
 pygame.init()
 
-# Screen dimensions
 WIDTH, HEIGHT = 800, 600
-SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Ping Pong - Pygame Version")
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Ping Pong Game")
 
-# Colors
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-
-# Clock
 clock = pygame.time.Clock()
-FPS = 60
+game = GameEngine(WIDTH, HEIGHT)
 
-# Game loop
-engine = GameEngine(WIDTH, HEIGHT)
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
 
-def main():
-    running = True
-    while running:
-        SCREEN.fill(BLACK)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
+    game.handle_input()
+    game.update()
+    game.render(screen)
+    pygame.display.flip()
 
-        engine.handle_input()
-        engine.update()
-        engine.render(SCREEN)
-
+    # If game over, delay and exit gracefully
+    if game.game_over:
         pygame.display.flip()
-        clock.tick(FPS)
+        pygame.time.delay(3000)  # 3-second delay before exit
+        running = False
 
-    pygame.quit()
+    clock.tick(60)
 
-if __name__ == "__main__":
-    main()
+pygame.quit()
