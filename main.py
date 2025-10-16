@@ -16,17 +16,28 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    game.handle_input()
-    game.update()
+        # After game over, wait for user keypress to show menu
+        elif event.type == pygame.KEYDOWN and game.game_over:
+            game.show_replay_menu()
+
+        # Handle replay menu choices
+        elif event.type == pygame.KEYDOWN and game.show_menu:
+            if event.key == pygame.K_3:
+                game.reset_game(3)
+            elif event.key == pygame.K_5:
+                game.reset_game(5)
+            elif event.key == pygame.K_7:
+                game.reset_game(7)
+            elif event.key == pygame.K_ESCAPE:
+                running = False
+
+    # Regular gameplay
+    if not game.show_menu:
+        game.handle_input()
+        game.update()
+
     game.render(screen)
     pygame.display.flip()
-
-    # If game over, delay and exit gracefully
-    if game.game_over:
-        pygame.display.flip()
-        pygame.time.delay(3000)  # 3-second delay before exit
-        running = False
-
     clock.tick(60)
 
 pygame.quit()
