@@ -2,8 +2,9 @@ import pygame
 from .paddle import Paddle
 from .ball import Ball
 
+# Game Engine
+
 WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
 
 class GameEngine:
     def __init__(self, width, height):
@@ -16,16 +17,11 @@ class GameEngine:
         self.ai = Paddle(width - 20, height // 2 - 50, self.paddle_width, self.paddle_height)
         self.ball = Ball(width // 2, height // 2, 7, 7, width, height)
 
-        self.font = pygame.font.SysFont("Arial", 30)
-        self.large_font = pygame.font.SysFont("Arial", 40)
-
-        # Default settings
         self.player_score = 0
         self.ai_score = 0
-        self.target_score = 5  # default: best of 5
+        self.font = pygame.font.SysFont("Arial", 30)
         self.game_over = False
-        self.show_menu = False
-        self.winner_text = ""
+        self.winner = None
 
     def handle_input(self):
         keys = pygame.key.get_pressed()
@@ -35,10 +31,8 @@ class GameEngine:
             self.player.move(10, self.height)
 
     def update(self):
-        if self.game_over or self.show_menu:
-            return  # pause updates when game is over or menu is open
-
-        self.ball.move(self.player, self.ai)
+        self.ball.move()
+        self.ball.check_collision(self.player, self.ai)
 
         if self.ball.x <= 0:
             self.ai_score += 1
@@ -48,65 +42,69 @@ class GameEngine:
             self.ball.reset()
 
         self.ai.auto_track(self.ball, self.height)
-        self.check_game_over()
 
-    def check_game_over(self):
-        """Check if anyone reached the target score."""
-        if self.player_score == self.target_score:
-            self.winner_text = "Player Wins!"
+        # Game over condition
+        if self.player_score >= 5:
             self.game_over = True
-        elif self.ai_score == self.target_score:
-            self.winner_text = "AI Wins!"
+            self.winner = "Player"
+        elif self.ai_score >= 5:
             self.game_over = True
+            self.winner = "AI"
+
+    def display_game_over(self, screen):
+        font = pygame.font.SysFont("Arial", 60)
+        text = f"{self.winner} Wins!"
+        label = font.render(text, True, (255, 255, 255))
+        screen.fill((0, 0, 0))
+        screen.blit(label, (self.width//2 - 150, self.height//2 - 50))
+        pygame.display.flip()
 
     def render(self, screen):
-        screen.fill(BLACK)
-
         # Draw paddles and ball
         pygame.draw.rect(screen, WHITE, self.player.rect())
         pygame.draw.rect(screen, WHITE, self.ai.rect())
         pygame.draw.ellipse(screen, WHITE, self.ball.rect())
-        pygame.draw.aaline(screen, WHITE, (self.width // 2, 0), (self.width // 2, self.height))
+        pygame.draw.aaline(screen, WHITE, (self.width//2, 0), (self.width//2, self.height))
 
-        # Draw scores
+        # Draw score
         player_text = self.font.render(str(self.player_score), True, WHITE)
         ai_text = self.font.render(str(self.ai_score), True, WHITE)
-        screen.blit(player_text, (self.width // 4, 20))
-        screen.blit(ai_text, (self.width * 3 // 4, 20))
+        screen.blit(player_text, (self.width//4, 20))
+        screen.blit(ai_text, (self.width * 3//4, 20))
 
-        # Game Over screen
-        if self.game_over:
-            text_surface = self.large_font.render(self.winner_text, True, WHITE)
-            screen.blit(text_surface, (self.width // 2 - text_surface.get_width() // 2, self.height // 2 - 60))
+    
+    def display_replay_menu(self, screen):
+        font = pygame.font.SysFont("Arial", 30)
+        options = [
+            "Press 3 for Best of 3",
+            "Press 5 for Best of 5",
+            "Press 7 for Best of 7",
+            "Press ESC to Exit"
+        ]
+        screen.fill((0, 0, 0))
+        for i, text in enumerate(options):
+            label = font.render(text, True, (255, 255, 255))
+            screen.blit(label, (self.width//2 - 150, 200 + i*50))
+        pygame.display.flip()
 
-            hint = self.font.render("Press any key to continue...", True, WHITE)
-            screen.blit(hint, (self.width // 2 - hint.get_width() // 2, self.height // 2 + 10))
-
-        # Replay menu
-        if self.show_menu:
-            title = self.large_font.render("Choose Game Mode", True, WHITE)
-            screen.blit(title, (self.width // 2 - title.get_width() // 2, self.height // 2 - 120))
-
-            opt1 = self.font.render("3 - Best of 3", True, WHITE)
-            opt2 = self.font.render("5 - Best of 5", True, WHITE)
-            opt3 = self.font.render("7 - Best of 7", True, WHITE)
-            opt4 = self.font.render("ESC - Exit", True, WHITE)
-
-            screen.blit(opt1, (self.width // 2 - opt1.get_width() // 2, self.height // 2 - 40))
-            screen.blit(opt2, (self.width // 2 - opt2.get_width() // 2, self.height // 2))
-            screen.blit(opt3, (self.width // 2 - opt3.get_width() // 2, self.height // 2 + 40))
-            screen.blit(opt4, (self.width // 2 - opt4.get_width() // 2, self.height // 2 + 80))
-
-    def show_replay_menu(self):
-        """Prepare to show replay menu."""
-        self.show_menu = True
-        self.game_over = False
-
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    return None
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_3:
+                        return 3
+                    elif event.key == pygame.K_5:
+                        return 5
+                    elif event.key == pygame.K_7:
+                        return 7
+                    elif event.key == pygame.K_ESCAPE:
+                        return None
+                
     def reset_game(self, target_score):
-        """Reset all scores and positions for replay."""
         self.player_score = 0
         self.ai_score = 0
+        self.game_over = False
+        self.winner = None
         self.target_score = target_score
         self.ball.reset()
-        self.game_over = False
-        self.show_menu = False
