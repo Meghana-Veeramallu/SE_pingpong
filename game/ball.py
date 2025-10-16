@@ -17,18 +17,27 @@ class Ball:
         self.wall_sound = pygame.mixer.Sound("sounds/wall_bounce.wav")
         self.score_sound = pygame.mixer.Sound("sounds/score.wav")
 
-    def move(self):
-        # Move the ball in small increments for more accurate collision
-        steps = max(abs(self.velocity_x), abs(self.velocity_y))
+    def move(self, player=None, ai=None):
+        steps = max(abs(self.velocity_x), abs(self.velocity_y), 1)
         for _ in range(steps):
             self.x += self.velocity_x / steps
             self.y += self.velocity_y / steps
 
-            # Bounce on walls
+            # Bounce on top/bottom walls
             if self.y <= 0 or self.y + self.height >= self.screen_height:
                 self.velocity_y *= -1
                 self.wall_sound.play()
-                break
+
+            # Paddle collision
+            if player and self.rect().colliderect(player.rect()):
+                self.x = player.x + player.width
+                self.velocity_x = abs(self.velocity_x)
+                self.hit_sound.play()
+
+            elif ai and self.rect().colliderect(ai.rect()):
+                self.x = ai.x - self.width
+                self.velocity_x = -abs(self.velocity_x)
+                self.hit_sound.play()
 
     def check_collision(self, player, ai):
         ball_rect = self.rect()

@@ -31,23 +31,32 @@ class GameEngine:
             self.player.move(10, self.height)
 
     def update(self):
-        self.ball.move()
-        self.ball.check_collision(self.player, self.ai)
+        # Pass paddles to ball.move() so collisions are checked inside move
+        self.ball.move(self.player, self.ai)
 
+        # Check if the ball went out for scoring
         if self.ball.x <= 0:
             self.ai_score += 1
+            self.ball.score_sound.play()
             self.ball.reset()
         elif self.ball.x >= self.width:
             self.player_score += 1
+            self.ball.score_sound.play()
             self.ball.reset()
 
+        # AI movement
         self.ai.auto_track(self.ball, self.height)
 
-        # Game over condition
-        if self.player_score >= 5:
+        # Game over
+        if hasattr(self, 'target_score'):
+            t_score = self.target_score
+        else:
+            t_score = 5
+
+        if self.player_score >= t_score:
             self.game_over = True
             self.winner = "Player"
-        elif self.ai_score >= 5:
+        elif self.ai_score >= t_score:
             self.game_over = True
             self.winner = "AI"
 
