@@ -13,9 +13,9 @@ class Ball:
         self.screen_height = screen_height
         self.velocity_x = random.choice([-5, 5])
         self.velocity_y = random.choice([-3, 3])
-        self.hit_sound = pygame.mixer.Sound("assets/paddle_hit.wav")
-        self.wall_sound = pygame.mixer.Sound("assets/wall_bounce.wav")
-        self.score_sound = pygame.mixer.Sound("assets/score.wav")
+        self.hit_sound = pygame.mixer.Sound("sounds/paddle_hit.wav")
+        self.wall_sound = pygame.mixer.Sound("sounds/wall_bounce.wav")
+        self.score_sound = pygame.mixer.Sound("sounds/score.wav")
 
     def move(self):
         # Move the ball in small increments for more accurate collision
